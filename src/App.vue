@@ -1,16 +1,26 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-</script>
-
 <template>
-  <header>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  <n-space  vertical size="large">
+    <n-layout  position="absolute">
+      <n-layout-header>
+        <n-space justify="center" :size="50">
+          <n-button size="large">导入文本</n-button>
+          <n-button size="large">导出文本</n-button>
+        </n-space>
+      </n-layout-header>
+      <n-layout-content style="padding-top: 5%;width: 70%;margin: auto" >
+        <n-dynamic-input   v-model:value="value" placeholder="请输入" :min="3" :max="6" />
+        <pre>{{ JSON.stringify(value, null, 2) }}</pre>
+      </n-layout-content>
+    </n-layout>
+  </n-space>
 </template>
+
+<script setup>
+
+
+const value = ref(["", "", ""])
+
+</script>
 
 <style scoped>
 header {
