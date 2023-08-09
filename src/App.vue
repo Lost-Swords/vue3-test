@@ -2,22 +2,23 @@
   <n-space vertical size="large">
     <n-layout position="absolute">
       <n-layout-header>
-        <n-space justify="center" :size="50">
-          <n-button size="large">导入文本</n-button>
+        <n-space justify="center" :align="'center'" :size="50">
+          <n-button  @click="handleKeyUp" size="large">导入文本</n-button>
           <n-button size="large">导出文本</n-button>
           <n-switch size="large">
             <template #checked>
-              歌词
+              翻译
             </template>
             <template #unchecked>
-              翻译
+              歌词
             </template>
           </n-switch>
         </n-space>
       </n-layout-header>
-      <n-layout-content style="padding-top: 5%;width: 70%;margin: auto">
-        <n-dynamic-input v-model:value="value" placeholder="请输入" :min="1"  />
+      <n-layout-content style="padding-top: 5%;width: 70%;margin: auto" >
+        <n-dynamic-input  @keyup="handleKeyUp"  v-model:value="lyricList" placeholder="请输入" :min="1"  />
       </n-layout-content>
+      
     </n-layout>
   </n-space>
 </template>
@@ -25,8 +26,13 @@
 <script setup>
 
 
-const value = ref(["", "", ""])
+const lyricList = ref([""])
 
+function handleKeyUp(value,index) {
+  // if(value.code === 'Enter') {
+  //   lyricList.value.push("");
+  // }
+}
 </script>
 
 <style scoped>
