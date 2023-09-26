@@ -16,7 +16,14 @@
         </n-space>
       </n-layout-header>
       <n-layout-content style="padding-top: 5%;width: 70%;margin: auto">
-        <n-dynamic-input v-if="!isTranslate" @keyup="handleKeyUp" v-model:value="lyricList" placeholder="请输入" :min="1" />
+        <n-dynamic-input v-if="!isTranslate" @keyup="handleKeyUp" v-model:value="lyricList" placeholder="请输入歌词"
+          :min="1" />
+        <n-dynamic-input v-else v-model:value="translateList" placeholder="请输入翻译" :min="1"  #="{ index, value }" >
+            <div style="display: flex; align-items: center; width: 100%">
+              <n-input v-model:value="lyricList[index]" disable type="text" />
+              <n-input v-model:value="translateList[index]" type="text" />
+            </div>
+        </n-dynamic-input>
       </n-layout-content>
     </n-layout>
   </n-space>
@@ -25,6 +32,8 @@
 <script setup>
 
 const lyricList = ref([""])
+const translateList = ref([""])
+const isTranslate = ref(false)
 
 async function handleKeyUp(value) {
   if (value.code === 'Enter') {
@@ -52,7 +61,13 @@ function findRootNodeWithElement(element, targetTagName) {
   return null
 }
 
-const isTranslate = ref(false)
+watch(
+  () => lyricList.value,
+  (value, prevCount) => {
+    /* ... */
+  }
+)
+
 
 </script>
 
