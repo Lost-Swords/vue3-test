@@ -3,26 +3,45 @@
     <n-layout position="absolute">
       <n-layout-header>
         <n-space justify="center" :align="'center'" :size="50">
-          <n-button @click="handleKeyUp" size="large">导入文本</n-button>
-          <n-button size="large">导出文本</n-button>
+          <n-upload
+            ref="upload"
+            :default-upload="false"
+            accept=".txt"
+            @change="textUpload"
+            :show-file-list="false"
+            v-model:file-list="fileList"
+          >
+            <n-button>导入文本</n-button>
+          </n-upload>
+          <n-button @click="textExport" size="large">导出文本</n-button>
           <n-switch size="large" v-model:value="isTranslate">
-            <template #checked>
-              翻译
-            </template>
-            <template #unchecked>
-              歌词
-            </template>
+            <template #checked> 翻译 </template>
+            <template #unchecked> 歌词 </template>
           </n-switch>
         </n-space>
       </n-layout-header>
-      <n-layout-content style="padding-top: 5%;width: 70%;margin: auto">
-        <n-dynamic-input v-if="!isTranslate" @keyup="handleKeyUp" v-model:value="lyricList" placeholder="请输入歌词"
-          :min="1" />
-        <n-dynamic-input v-else v-model:value="translateList" placeholder="请输入翻译" :min="1"  #="{ index, value }" >
+      <n-layout-content style="padding-top: 5%; width: 70%; margin: auto">
+        <n-dynamic-input
+          v-if="!isTranslate"
+          @keyup="lyricListAdd"
+          v-model:value="lyricList"
+          placeholder="请输入歌词"
+          :min="1"
+        />
+        <n-dynamic-input v-else v-model:value="lyricList" :min="1">
+          <template #default="{ index, value }">
             <div style="display: flex; align-items: center; width: 100%">
-              <n-input v-model:value="lyricList[index]" disable type="text" />
-              <n-input v-model:value="translateList[index]" type="text" />
+              <p :text="lyricList[index]" style="width: 100%">
+                {{ lyricList[index] ? lyricList[index] : '该行无文本' }}
+              </p>
+              <n-input
+                v-model:value="translateList[index]"
+                @keyup="focusNextInput"
+                placeholder="请输入翻译"
+                type="text"
+              />
             </div>
+          </template>
         </n-dynamic-input>
       </n-layout-content>
     </n-layout>
@@ -30,35 +49,74 @@
 </template>
 
 <script setup>
-
-const lyricList = ref([""])
-const translateList = ref([""])
+import { getCurrentInstance } from 'vue'
+import { textDownload, findRootNodeWithElement } from './utils/utils.js'
+const lyricList = ref([''])
+const translateList = ref([''])
 const isTranslate = ref(false)
+const fileList  = ref([]);
 
-async function handleKeyUp(value) {
-  if (value.code === 'Enter') {
-    if (findRootNodeWithElement(value.target, 'data-key') === (lyricList.value.length - 1).toString()) {
-      lyricList.value.push("");
-      await nextTick();
-    }
-    let inputs = document.getElementsByTagName("input");
-    for (var i = 0; i < inputs.length; i++) {
-      // 如果是最后一个，则焦点回到第一个
-      if (value.srcElement == inputs[i]) {
-        inputs[i + 1].focus(); break;
-      }
+//递增歌词数组，并聚焦到下一个
+async function lyricListAdd(value) {
+  if (value.code !== 'Enter') {
+    return
+  }
+  if (
+    findRootNodeWithElement(value.target, 'data-key') ===
+    (lyricList.value.length - 1).toString()
+  ) {
+    lyricList.value.push('')
+    await nextTick()
+  }
+  let inputs = document.getElementsByTagName('input')
+  for (var i = 0; i < inputs.length; i++) {
+    if (value.srcElement == inputs[i]) {
+      inputs[i + 1].focus()
+      break
     }
   }
 }
-function findRootNodeWithElement(element, targetTagName) {
-  // 从当前元素开始向上遍历DOM树
-  if (element !== null && element.getAttribute(targetTagName)) {
-    return element.getAttribute(targetTagName);
-  } else if (element.parentElement) {
-    // 如果找到包含目标元素的根节点，则返回该根节点；否则返回null
-    return findRootNodeWithElement(element.parentElement, targetTagName);
+
+function textUpload(options) {
+  let selectedFile = options.file.file
+  if (selectedFile) {
+    let reader = new FileReader()
+
+    reader.onload = function (e) {
+      let fileContent = e.target.result; // 文件内容
+      let stringList = fileContent.split('\r\n');
+      lyricList.value = stringList;
+      fileList.value = [];
+    }
+    reader.readAsText(selectedFile)
   }
-  return null
+
+}
+
+function focusNextInput(value) {
+  if (value.code !== 'Enter') {
+    return
+  }
+  let inputs = document.getElementsByTagName('input')
+  for (var i = 0; i < inputs.length; i++) {
+    if (value.srcElement == inputs[i]) {
+      inputs[i + 1].focus()
+      break
+    }
+  }
+}
+
+//导出歌词文本
+function textExport() {
+  if (lyricList.value.length <= 0) {
+    return
+  }
+  let text = lyricList.value.reduce(
+    (text, current, index) =>
+      text + '\n' + current + ' ' + translateList.value[index],
+    lyricList.value[0] + ' ' + translateList.value[0]
+  )
+  textDownload('lyric', text)
 }
 
 watch(
@@ -67,8 +125,6 @@ watch(
     /* ... */
   }
 )
-
-
 </script>
 
 <style scoped>
