@@ -1,10 +1,9 @@
-
-
 <template>
-   <n-space vertical size="large">
+  <n-space vertical size="large">
     <n-layout position="absolute">
       <n-layout-header>
         <n-space justify="center" :align="'center'" :size="50">
+          <n-button size="large" @click="showPasteModal = true">粘贴文本</n-button>
           <n-upload
             ref="upload"
             :default-upload="false"
@@ -32,13 +31,12 @@
         />
         <n-dynamic-input v-else v-model:value="lyricList" :min="1">
           <template #default="{ index, value }">
-            <div style="display: flex; align-items: center; width: 100%">
-              <p v-if="lyricList[index]" style="width: 100%;">
+            <div style="display: flex; align-items: center; flex-direction: column; width: 100%">
+              <p v-if="lyricList[index]" style="width: 100%">
                 {{ lyricList[index] }}
               </p>
-              <p v-else style="width: 100%;color: #f70808;">
-                该行无文本
-              </p>
+              <p v-else style="width: 100%; color: #f70808">该行无文本</p>
+              <br>
               <n-input
                 v-model:value="translateList[index]"
                 @keyup="focusNextInput"
@@ -51,54 +49,81 @@
       </n-layout-content>
     </n-layout>
   </n-space>
+  <n-modal
+    v-model:show="showPasteModal"
+    preset="dialog"
+    title="粘贴歌词文本"
+    positive-text="确认"
+    negative-text="取消"
+    @positive-click="submitCallback"
+  >
+  <n-input
+      v-model:value="inputLyrics"
+      type="textarea"
+      placeholder="请在这里粘贴歌词"
+      style="height: 200px;"
+    />
+  </n-modal>
 </template>
 <script setup>
 import { textDownload, findRootNodeWithElement } from '../utils/utils'
-import { useMessage, useDialog } from "naive-ui";
+import { useMessage, useDialog } from 'naive-ui'
 const lyricList = ref(['']);
 const translateList = ref(['']);
 const isTranslate = ref(false);
-const fileList  = ref([]);
+const fileList = ref([]);
 const dialog = useDialog();
+const showPasteModal = ref(false);//zhan
+const inputLyrics = ref('');
 
 //递增歌词数组，并聚焦到下一个
 async function lyricListAdd(value) {
   if (value.code !== 'Enter') {
-    return
+    return;
   }
   if (
     findRootNodeWithElement(value.target, 'data-key') ===
     (lyricList.value.length - 1).toString()
   ) {
-    lyricList.value.push('')
-    await nextTick()
+    lyricList.value.push('');
+    await nextTick();
   }
-  let inputs = document.getElementsByTagName('input')
+  let inputs = document.getElementsByTagName('input');
   for (var i = 0; i < inputs.length; i++) {
     if (value.srcElement == inputs[i]) {
-      inputs[i + 1].focus()
-      break
+      inputs[i + 1].focus();
+      break;
     }
   }
+}
+
+// 导入歌词
+function lyricsInput(text) {
+  let stringList = text.split('\n').map(i => i.replace(/[\n\r]+/g, '')).filter((i) => i !== '');
+  lyricList.value = stringList;
 }
 
 //上传文本
 function textUpload(options) {
-  let selectedFile = options.file.file
+  let selectedFile = options.file.file;
   if (selectedFile) {
-    let reader = new FileReader()
+    let reader = new FileReader();
 
     reader.onload = function (e) {
-      let fileContent = e.target.result; // 文件内容
-      let stringList = fileContent.split('\r\n');
-      lyricList.value = stringList;
+      let fileContent = e.target.result ;// 文件内容
+      lyricsInput(fileContent);
       fileList.value = [];
     }
-    reader.readAsText(selectedFile)
+    reader.readAsText(selectedFile);
   }
-
 }
 
+function submitCallback() {
+  lyricsInput(inputLyrics.value);
+  inputLyrics.value="";
+}
+
+//回车触发焦点转移到下一个输出框
 function focusNextInput(value) {
   if (value.code !== 'Enter') {
     return
@@ -106,8 +131,8 @@ function focusNextInput(value) {
   let inputs = document.getElementsByTagName('input')
   for (var i = 0; i < inputs.length; i++) {
     if (value.srcElement == inputs[i]) {
-      inputs[i + 1].focus()
-      break
+      inputs[i + 1].focus();
+      break;
     }
   }
 }
@@ -118,34 +143,29 @@ function handleTextExport() {
     return;
   }
   //检测是否存在空白行
-  if (lyricList.value.some(r => !r ) || translateList.value.some(i => !i)) {
+  if (lyricList.value.some((r) => !r) || translateList.value.some((i) => !i)) {
     dialog.warning({
-          title: '警告',
-          content: '有空白行，确定导出？',
-          positiveText: '确定',
-          negativeText: '取消',
-          onPositiveClick: () => {
-            textExport()
-          }
-        })
-    return;
+      title: '警告',
+      content: '有空白行，确定导出？',
+      positiveText: '确定',
+      negativeText: '取消',
+      onPositiveClick: () => {
+        textExport();
+      },
+    })
+    return
   }
   textExport();
 }
 
+//处理歌词导出文本
 function textExport() {
-
- 
-
-  let text = lyricList.value.reduce(
-    (text, current, index) => {
-      let lyric = current ? current : '';
-      let translate = translateList.value[index] ? translateList.value[index] : '';
-      return text + '\n' + lyric  + '\n' + translate + '\n';
-    },
-      '歌词翻译\n'
-  )
-  textDownload('lyric', text)
+  let text = lyricList.value.reduce((text, current, index) => {
+    let lyric = current ? current : ''
+    let translate = translateList.value[index] ? translateList.value[index] : ''
+    return text + '\n' + lyric + '\n' + translate + '\n'
+  }, '歌词翻译\n')
+  textDownload('lyric', text);
 }
 watch(
   () => lyricList.value,
