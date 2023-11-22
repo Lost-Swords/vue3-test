@@ -1,6 +1,8 @@
 <template>
   <n-dialog-provider>
+    <n-message-provider>
     <Main></Main>
+    </n-message-provider>
   </n-dialog-provider>
 </template>
 

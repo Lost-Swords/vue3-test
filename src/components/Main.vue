@@ -15,6 +15,7 @@
             <n-button>导入文本</n-button>
           </n-upload>
           <n-button @click="handleTextExport" size="large">导出文本</n-button>
+          <n-button @click="openLyricsEditor">歌词制作器</n-button>
           <n-switch size="large" v-model:value="isTranslate">
             <template #checked> 翻译 </template>
             <template #unchecked> 歌词 </template>
@@ -73,7 +74,8 @@ const translateList = ref(['']);
 const isTranslate = ref(false);
 const fileList = ref([]);
 const dialog = useDialog();
-const showPasteModal = ref(false);//zhan
+const message = useMessage();
+const showPasteModal = ref(false);//歌词粘贴框
 const inputLyrics = ref('');
 
 //递增歌词数组，并聚焦到下一个
@@ -140,6 +142,7 @@ function focusNextInput(value) {
 //导出歌词文本
 function handleTextExport() {
   if (lyricList.value.length <= 0) {
+    message.warning("没有可以导出的文本")
     return;
   }
   //检测是否存在空白行
@@ -165,7 +168,12 @@ function textExport() {
     let translate = translateList.value[index] ? translateList.value[index] : ''
     return text + '\n' + lyric + '\n' + translate + '\n'
   }, '歌词翻译\n')
-  textDownload('lyric', text);
+  textDownload('lyricTranslator', text);
+}
+
+// 打开歌词制作器
+function openLyricsEditor() {
+  window.open("https://judes.me/lrc_editor/",'_blank')
 }
 watch(
   () => lyricList.value,
