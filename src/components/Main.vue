@@ -12,10 +12,10 @@
             :show-file-list="false"
             v-model:file-list="fileList"
           >
-            <n-button>导入文本</n-button>
+            <n-button size="large">导入文本</n-button>
           </n-upload>
           <n-button @click="handleTextExport" size="large">导出文本</n-button>
-          <n-button @click="openLyricsEditor">歌词制作器</n-button>
+          <n-button @click="openLyricsEditor" size="large">歌词制作器</n-button>
           <n-switch size="large" v-model:value="isTranslate">
             <template #checked> 翻译 </template>
             <template #unchecked> 歌词 </template>
