@@ -80,7 +80,7 @@ const inputLyrics = ref('');
 
 //递增歌词数组，并聚焦到下一个
 async function lyricListAdd(value) {
-  if (value.code !== 'Enter') {
+  if (!value.ctrlKey || value.code !== 'Enter') {
     return;
   }
   if (
